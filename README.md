@@ -10,13 +10,7 @@ The project has three primary objectives:
 If successful, such a predictive model could become a clinical decision-support tool, helping to verify or even challenge standard treatment recommendations for individual patients. This would mean that, given two or more possible treatments, an algorithm could suggest which one is likely to work best for a specific patient based on their unique biomarker signature.
 
 ## Repository Structure
-```text
-Predictor_of_LUAD_treatments_based_on_molecular_profile/
-├── Predictor_of_LUAD_treatments.ipynb
-├── MSK_CHORD.csv
-├── project_presentation.pdf
-└── README.md
-```
+
 `Predictor_of_LUAD_treatments.ipynb` — Main notebook implementing the full experimental pipeline for treatment classification.
 
 `MSK_CHORD.csv` — Processed LUAD dataset snapshot produced by the notebook (patient-level table integrating selected clinical variables, binary indicators of recurrent genomic alterations, and treatment category labels), then reloaded for downstream preprocessing and modelling.
@@ -29,11 +23,11 @@ Predictor_of_LUAD_treatments_based_on_molecular_profile/
 ## Data Description
 **Dataset:** [MSK-CHORD (Nature 2024)](https://www.cbioportal.org/study/summary?id=msk_chord_2024), a large multi-institutional oncology cohort accessible via cBioPortal. It comprises clinical, genomic and treatment data for around 25,000 cancer patients. This analysis focuses on the LUAD (lung adenocarcinoma) subcohort.
 
-**Files used:** `data_clinical_patient.txt`, `data_clinical_sample.txt`, `data_mutations.txt`, `data_timeline_treatment.txt`
+**Data Files Used:** `data_clinical_patient.txt`, `data_clinical_sample.txt`, `data_mutations.txt`, `data_timeline_treatment.txt`
 
 **Cohort Filter:**
-  - Full LUAD cohort: 4,463 patients with treatment annotations (multi-therapy combinations allowed → 11 classes).
-  - Single-therapy subset: 1,300 patients receiving exactly one therapy category → 5 classes.
+  - Full LUAD cohort: 4,463 patients with treatment annotations.
+  - Single-therapy subset: 1,300 patients receiving exactly one therapy category.
 
 **Features:**
   - Genomic: Binary mutation indicators for 23 genes mutated in ≥5% of LUAD samples (e.g., TP53, EGFR, STK11).
@@ -41,61 +35,67 @@ Predictor_of_LUAD_treatments_based_on_molecular_profile/
 
 **Outcome Label:** Treatment category per patient (either a single category in the 5-class subset or a combination label in the 11-class setting). Rare combinations were grouped into “Other” or excluded when constructing the single-therapy subset.
 
-**Additional dataset (sanity check):** scikit-learn Digits (10 classes) to validate the modelling pipeline (expected high accuracy), helping isolate dataset difficulty from implementation issues.
+**Additional dataset (sanity check):** **scikit-learn Digits** (n=1797, 10-class handwritten digits) to validate the modelling pipeline (expected high accuracy), helping isolate dataset difficulty from implementation issues.
 
 > [!NOTE]
 > *Interpretation note:* The substantial performance gap between the 11-class multi-therapy setting and the 5-class single-therapy subset supports the hypothesis that molecular profiles have predictive potential for treatment type. In the single-therapy subset, each patient’s profile is linked to one dominant treatment modality, yielding a cleaner mapping between features and label. In contrast, multi-therapy labels effectively mix multiple treatment signals within a single patient profile, making the learning problem more ambiguous and weakly supervised.
 
 ## Project Workflow
-1. **Data ingestion & preprocessing** - Acquire clinical, sample, mutation and treatment tables from MSK‑CHORD; filter to LUAD patients; map mutation entries to patients by ID; and merge all modalities to create a unified patient‑level dataset.
+1. **Data Ingestion & Preprocessing** 
+- Loading clinical patient data, sample metadata, mutation calls, and treatment timelines from the MSK-CHORD files.
+- Filtering to lung adenocarcinoma patients and aligning records by patient ID.
+- Merging all data sources into a single **patient-level table**.
 
-2. **Label engineering: treatment categories**
-   - Define therapy subtypes: **Chemo**, **Immuno**, **Molecular**, **Supportive**, **Investigational**.
-   - Derive patient-level treatment labels from the treatment timeline: sort per-patient events by date and aggregate unique therapy subtupe values into a single label using '+' concatenation (chronology-aware, de-duplicated).
-   - Class simplification: merge similar subtypes into a common taxonomy (e.g., targeted/biologic → Molecular; hormone/bone-strengthening → Supportive).
-   - Normalize combination labels to a canonical ordering to avoid equivalent labels with different orderings.
-    - Build two target settings:
-    - **Multi-treatment label setting**: keep the **top-10 most frequent combinations**, collapse the rest into **“Other”** → **11 classes** total 
-    - **Single-treatment setting**: keep only patients with exactly one of {Chemo, Immuno, Molecular, Supportive, Investigational} → **5 classes** 
+2. **Label Engineering (Therapy Categories)**
+- Define five therapy subtypes: **Chemo, Immuno, Molecular, Supportive, Investigational**.
+- Transform each patient’s timeline into a label: sort events by date per patient, collect unique therapy subtypes, and join them with '+' if multiple were received (e.g., Chemo+Molecular for a patient who had both).
+- Class simplification: merge similar subtypes into a common taxonomy (e.g., targeted/biologic → Molecular).
+- Normalize combination labels to a consistent order (to avoid duplicate classes like Immuno+Chemo vs Chemo+Immuno).
+- Build two target settings:
+  - **Multi-treatment labels (11 classes):** Top 10 most frequent therapy combinations + an “Other” category for all rarer combinations.
+  - **Single-treatment labels (5 classes):** Keep only patients with exactly one therapy subtype. 
 
-3. **Feature engineering**
-  - **Genomic features**
-      - Pivot mutations into a binary patient × gene matrix (0/1 indicator per gene).
-      - Filter genes by prevalence: keep genes mutated in >5% of LUAD patients.
-  - **Clinical features**
-      - Create binary clinical indicators
-      - Scale numeric clinical variables
-      - Drop leakage / non-feature columns
+3. **Feature Engineering**
+- **Genomic features:** Pivot the mutation list into a binary matrix of patients × genes. Keep genes mutated in >5% of LUAD patients to ensure relevance (yielding 23 genomic features).
+- **Clinical features:** Select informative clinical variables (e.g. age, stage, smoking history). Encode categorical variables as one-hot vectors and scale continuous variables. Remove any columns that leak the target or are irrelevant for prediction.
 
-4. **Setup datasets**
-  - `msk_chord`: LUAD multi-treatment (top-10 combos + Other → 11 classes)
-  - `msk_chord_filtered`: LUAD single-treatment only (5 classes)
-  - `digits`: scikit-learn Digits (10 classes) used as a sanity-check benchmark
+  Concatenate genomic and clinical features for each patient to form the final feature vector.
 
-5. **Model Training**
-  - **Approach A — Individual classifiers**
+4. **Setup datasets** Build training/evaluation datasets for different scenarios:
+  - `msk_chord`: LUAD multi-treatment (top-10 combos + Other → 11 classes).
+  - `msk_chord_filtered`: LUAD single-treatment only (5 classes).
+  - `digits`: scikit-learn Digits (10 classes) used as a sanity-check benchmark.
+
+5. **Model Training** Two modeling pipelines are executed in parallel to compare performance:
+- **Approach A — Individual classifiers (6 models)** Train and tune a variety of standalone classification algorithms:
+  - **Models explored:**
     - Decision Tree
     - Random Forest
-    - SVM, BernoulliNB
+    - Support Vector Machine (SVM)
+    - Bernoulli Naive Bayes
     - Logistic Regression
-    - CatBoost
-    
-    Each model is tuned with **GridSearchCV** (CV=3), then re-evaluated with a **final cross-validation** (CV=3) using **Accuracy** + **Macro-F1**
-    
-  - **Approach B — HyperParamEnsemble (6 models)**
-    - Custom scikit-learn-compatible estimator `HyperParamEnsembleClassifier`
-    - Trains multiple instances of the same base algorithm across a parameter grid and aggregates predictions via voting:
-      - **Hard voting**: majority class
-      - **Soft voting**: mean predicted probabilities then argmax
-    - Evaluated via a **single stratified train/test split** (80/20), reporting **Accuracy** + **Macro-F1**
+    - CatBoost (gradient boosting)
 
-6. **Evaluation, comparison, and reporting**
-  - Collect per-(dataset, model) metrics into structured tables.
-  - Visualize model performance:
-    - Heatmaps for Accuracy and Macro-F1 across datasets/models
-    - Bar charts of mean metrics across datasets
-  - Run statistical comparisons across models using **Friedman test** and **Nemenyi post-hoc** (via `aeon`) and plot a **Critical Difference diagram**.
+   - **Hyperparameter Tuning:** Each model is optimised with grid search (GridSearchCV, 3-fold cross-validation on the training data) to find the best hyperparameters.
+  - **Model Evaluation (CV):** After tuning, each model’s best estimator is re-evaluated using an additional cross-validation (3-fold) on the respective dataset. Performance metrics recorded include Accuracy and Macro F1-score (to account for class imbalance).
+    
+- **Approach B — HyperParamEnsemble (6 models)** Train an ensemble of multiple classifier instances (homogeneous ensemble) for each algorithm type:
+  - Custom scikit-learn-compatible estimator `HyperParamEnsembleClassifier`, which builds an ensemble from one base algorithm (e.g., an ensemble of SVMs, an ensemble of RFs, etc.).
+  - **Ensemble Construction:** For a given base model type, train several instances across a grid of hyperparameters *(covering the same search space as in Approach A)*. The ensemble combines these members’ predictions by **voting**:
+      - *Hard*: each member votes for a class label, and the majority class is the ensemble prediction.
+      - *Soft*: average the predicted class probabilities from all members and pick the argmax as the final prediction.
+   
+   - **Model Evaluation (Hold-out):** Each `HyperParamEnsemble` is evaluated on a single stratified train/test split (80/20). Performance is measured with Accuracy and Macro F1-score on the held-out test set (no cross-validation, since the ensemble itself spans multiple models).
 
+6. **Evaluation & Comparison**
+  - Aggregate all metrics (accuracy, F1, etc.) per model and dataset into comparison tables for clarity.
+  - **Visualize** model performance:
+    - Heatmaps of Accuracy and Macro-F1 for each model vs. each dataset (facilitates quick performance scanning).
+    - Bar charts summarizing mean performance metrics by model type (to compare overall effectiveness).
+ 
+  - **Statistical Analysis:** Conduct non-parametric tests to check for significant performance differences:
+    - Perform a **Friedman test** across all classifiers (to detect overall differences in rankings on multiple datasets).
+    - If significant, follow up with a **Nemenyi post-hoc** test to identify pairwise differences. This is visualized with a **Critical Difference (CD) diagram** (using the `aeon` toolkit), showing groups of models that are not significantly different in performance.
 
 ## Results Summary
 
