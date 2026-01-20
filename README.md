@@ -98,6 +98,27 @@ If successful, such a predictive model could become a clinical decision-support 
     - If significant, follow up with a **Nemenyi post-hoc** test to identify pairwise differences. This is visualised with a **Critical Difference (CD) diagram** (using the `aeon` toolkit), showing groups of models that are not significantly different in performance.
 
 ## Results Summary
+For each dataset, the highest achieved Accuracy and Macro-F1 (with the model that achieved them) are summarized below:
+| Dataset                                   | Classes | Best Accuracy | Best Macro-F1 |
+|-------------------------------------------|:-------:|:-------------:|:-------------:|
+| Full MSK-CHORD (combo-therapy patients)   |   11    |     ~0.28     |     ~0.18     |
+| Filtered MSK-CHORD (single-therapy only)  |    5    |     ~0.65     |     ~0.44     |
+| Digits (sanity check)                     |   10    |     ~0.99     |     ~0.99     |
+
+
+> [!NOTE]
+> *Interpretation note:*  The goal of this experiment was to evaluate the performance of different classification models on multiple datasets, using both individual classifiers with hyperparameter tuning and an ensemble approach. In theory, ensembling should provide better generalization and performance than individual models, as it combines multiple models trained with different hyperparameters, which helps reduce variance and bias. However, the results turned out to be ambiguous.
+
+For simple datasets, individual models like SVM and Random Forest showed very high accuracy. In such cases, ensembling did not provide significant improvement, as the models were already performing almost perfectly. In some cases, accuracy reached 100%, which raised concerns about overfitting. This could have been due to the limited dataset sizes and the use of extensive hyperparameter grids. We used cross-validation to mitigate this effect, but it was not fully effective in preventing overfitting.
+
+Working with more complex datasets, such as Fashion-MNIST and MNIST, proved to be more computationally demanding, as training models on the full dataset required significant computational resources. At the same time, we used the same hyperparameter ranges for both individual classifiers and the ensemble.
+
+Regarding model performance, SVM turned out to be the slowest classifier. Reducing the number of folds in cross-validation and experimenting with kernels did not significantly affect its speed. However, our HyperParamEnsembleClassifier demonstrated decent efficiency on complex datasets — it maintained fairly high results with lower computational costs (presumably due to a small number of estimators) compared to tuning hyperparameter combinations for an individual SVM (the results were slightly better, but training took significantly longer). The ensemble also outperformed some individual classifiers on complex datasets, which indicates its ability to find diverse hyperparameter configurations.
+
+Overall, the ensemble performed completely opposite to expectations. On complex and large datasets, it showed worse results, while on simple and small ones, it performed better. One of the main reasons was the hyperparameter selection strategy. We used GridSearchCV for individual classifiers, which exhaustively searches through all possible hyperparameter combinations to find the optimal configuration. At the same time, our HyperParamEnsembleClassifier does not perform a full search but instead randomly selects a limited number of hyperparameter combinations (equal to the number of models in the ensemble) and averages the predictions through voting. This created a slight bias in favor of individual models, as they benefited from a more detailed hyperparameter search, whereas the ensemble depended on the random selection of configurations. A fairer comparison would have been to use RandomizedSearchCV for individual models. Additionally, in the future, performance can be improved by applying dimensionality reduction methods such as PCA, which will reduce the computational load when working with high-dimensional data, as well as by more precisely selecting hyperparameter ranges to achieve an optimal balance between prediction quality and model execution speed.
+
+
+
 ## Future Work
 ## Requirements
 
