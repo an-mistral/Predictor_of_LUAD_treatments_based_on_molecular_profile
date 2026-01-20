@@ -47,10 +47,7 @@ Predictor_of_LUAD_treatments_based_on_molecular_profile/
 > *Interpretation note:* The substantial performance gap between the 11-class multi-therapy setting and the 5-class single-therapy subset supports the hypothesis that molecular profiles have predictive potential for treatment type. In the single-therapy subset, each patient’s profile is linked to one dominant treatment modality, yielding a cleaner mapping between features and label. In contrast, multi-therapy labels effectively mix multiple treatment signals within a single patient profile, making the learning problem more ambiguous and weakly supervised.
 
 ## Project Workflow
-1. **Data acquisition and cohort construction**
-   - Load MSK-CHORD study tables from an extracted archive.
-   - Restrict the cohort to LUAD samples.
-   - Align modalities at the patient level.
+1. **Data ingestion & preprocessing** - Acquire clinical, sample, mutation and treatment tables from MSK‑CHORD; filter to LUAD patients; map mutation entries to patients by ID; and merge all modalities to create a unified patient‑level dataset.
 
 2. **Label engineering: treatment categories**
    - Define therapy subtypes: **Chemo**, **Immuno**, **Molecular**, **Supportive**, **Investigational**.
@@ -75,7 +72,7 @@ Predictor_of_LUAD_treatments_based_on_molecular_profile/
   - `msk_chord_filtered`: LUAD single-treatment only (5 classes)
   - `digits`: scikit-learn Digits (10 classes) used as a sanity-check benchmark
 
-5. **Two modelling approaches (12 total models)**
+5. **Model Training**
   - **Approach A — Individual classifiers**
     - Decision Tree
     - Random Forest
