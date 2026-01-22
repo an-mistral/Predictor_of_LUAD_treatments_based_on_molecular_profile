@@ -98,16 +98,31 @@ If successful, such a predictive model could become a clinical decision-support 
     - If significant, follow up with a **Nemenyi post-hoc** test to identify pairwise differences. This is visualised with a **Critical Difference (CD) diagram** (using the `aeon` toolkit), showing groups of models that are not significantly different in performance.
 
 ## Results Summary
-For each dataset, the highest achieved Accuracy and Macro-F1 (with the model that achieved them) are summarized below:
-| Dataset                                   | Classes | Best Accuracy | Best Macro-F1 |
-|-------------------------------------------|:-------:|:-------------:|:-------------:|
-| Full MSK-CHORD (combo-therapy patients)   |   11    |     ~0.28     |     ~0.18     |
-| Filtered MSK-CHORD (single-therapy only)  |    5    |     ~0.65     |     ~0.44     |
-| Digits (sanity check)                     |   10    |     ~0.99     |     ~0.99     |
+For each dataset, the highest achieved Accuracy and Macro-F1 (with the model that achieved them):
+| Dataset                                   | Classes |                   Best Accuracy                 |             Best Macro-F1           |
+|-------------------------------------------|:-------:|:-----------------------------------------------:|:-----------------------------------:|
+| Full MSK-CHORD (combo-therapy patients)   |   11    | Random Forest ~0.28                             | HyperParamEnsemble (CatBoost) ~0.18 |
+| Filtered MSK-CHORD (single-therapy only)  |    5    | HyperParamEnsemble (DecisionTree and SVM) ~0.65 | HyperParamEnsemble (LogReg) ~0.44   |
+| Digits (sanity check)                     |   10    | SVM ~0.99                                       | SVM ~0.99                           |
 
 
-> [!NOTE]
-> *Interpretation note:*  The goal of this experiment was to evaluate the performance of different classification models on multiple datasets, using both individual classifiers with hyperparameter tuning and an ensemble approach. In theory, ensembling should provide better generalization and performance than individual models, as it combines multiple models trained with different hyperparameters, which helps reduce variance and bias. However, the results turned out to be ambiguous.
+Top-3 Overall (mean across datasets):
+| Metric (mean across datasets) | Rank |                Model                |
+|-------------------------------|-----:|-------------------------------------|
+| Accuracy                      | 1    | SVM and Random Forest               |
+|                               | 2    | HyperParamEnsemble (SVM)            |
+|                               | 3    | HyperParamEnsemble (Random Forest)  |
+| Macro F1                      | 1    | HyperParamEnsemble (CatBoost)       |
+|                               | 2    | HyperParamEnsemble (LogReg)         |
+|                               | 3    | CatBoost                            |
+
+- As expected, the **Digits** control dataset was nearly solved by all models (≈97–99% accuracy), confirming the implementation’s correctness.
+
+**Key Findings:**
+- Molecular profiles alone have limited predictive power for chosen therapies – ~65% accuracy at best for single-modality treatment.
+- Predicting combination treatments is an open challenge (performance fell near chance-level).
+
+The goal of this experiment was to evaluate the performance of different classification models on multiple datasets, using both individual classifiers with hyperparameter tuning and an ensemble approach. In theory, ensembling should provide better generalization and performance than individual models, as it combines multiple models trained with different hyperparameters, which helps reduce variance and bias. However, the results turned out to be ambiguous.
 
 For simple datasets, individual models like SVM and Random Forest showed very high accuracy. In such cases, ensembling did not provide significant improvement, as the models were already performing almost perfectly. In some cases, accuracy reached 100%, which raised concerns about overfitting. This could have been due to the limited dataset sizes and the use of extensive hyperparameter grids. We used cross-validation to mitigate this effect, but it was not fully effective in preventing overfitting.
 
@@ -120,6 +135,39 @@ Overall, the ensemble performed completely opposite to expectations. On complex 
 
 
 ## Future Work
-## Requirements
 
+## Environment & Dependencies
+This project is implemented in Python (Jupyter/Colab) and uses a standard ML stack for tabular modelling, evaluation, and visualisation.
+
+**Core scientific stack:**
+- `pandas` — tabular data loading/cleaning/merging (patient-level tables, feature matrices)
+- `numpy` — numerical computing backbone (arrays, vectorised ops)
+
+**Visualisation & reporting:**
+- `matplotlib`, `seaborn` — plots and statistical graphics (e.g., heatmaps, metric summaries)
+- `tabulate` — readable result tables in notebook/console
+- `IPython.display` — rich notebook rendering (optional; notebook-only)
+
+**Modelling, preprocessing & evaluation:**
+- `scikit-learn` (`sklearn`) — core ML framework used for:
+  - Estimators: `LogisticRegression`, `BernoulliNB`, `DecisionTreeClassifier`, `RandomForestClassifier`, `SVC`
+  - Model selection & evaluation: `train_test_split`, `cross_validate`, `cross_val_score`, `GridSearchCV`, `ParameterGrid`
+  - Preprocessing: `SimpleImputer`, `MinMaxScaler`, `LabelEncoder`
+  - Metrics & reports: `accuracy_score`, `f1_score`, `classification_report` (plus `sklearn.metrics` utilities)
+  - Custom estimator support: `BaseEstimator`, `ClassifierMixin`, and validation helpers (`check_X_y`, `check_array`, `check_is_fitted`)
+  - Utilities / datasets: `Bunch` and toy datasets for sanity checks (e.g., `load_digits`)
+
+- `catboost` — gradient-boosted decision trees baseline (`CatBoostClassifier`)
+
+**Statistical comparison:** `aeon` — non-parametric statistical tests and visualisations for model comparison (Friedman/Nemenyi workflow, critical difference diagrams)
+  
+**Standard library utilities:** `random`, `itertools`, `time`, `pickle`, `inspect`, `tarfile`, `pathlib`
+
+### Installation (pip)
+Most dependencies are standard in common Python data-science environments.
+The notebook explicitly installs two additional packages: `aeon`, `catboost`.
+
+```bash
+pip install -U numpy pandas scikit-learn matplotlib seaborn tabulate catboost aeon
+```
 
