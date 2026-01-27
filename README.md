@@ -118,27 +118,16 @@ Top-3 Overall (mean across datasets):
 
 - The single-therapy vs. multi-therapy gap is a signal check: when labels are “clean” (single modality), performance is substantially higher; when labels mix modalities, performance drops sharply due to label ambiguity. This supports the existence of predictive signal in molecular profiles for treatment modality.
 - Single-therapy classification using molecular and clinical features was only moderately successful (highest ~65% accuracy and ~0.44 macro-F1), indicating limited predictive power for treatment selection from biomarkers.
-- All models nearly solved a control 10-class digits dataset (~97–99% accuracy), confirming the pipeline’s correctness and highlighting that the LUAD tasks’ low scores stem from data difficulty rather than modeling issues.
+- Macro F1 scores were substantially lower than accuracy on the LUAD datasets, reflecting class imbalance and uneven classifier performance across therapy types.
 - Sanity check (Digits dataset): models reach ~97–99% accuracy, indicating the implementation is correct and LUAD results are driven by task difficulty.
+- Top performers (Filtered MSK-CHORD, single-therapy, 5 classes): Best Accuracy ≈ 0.65 (HyperParamEnsemble DecisionTree and SVM); best Macro-F1 ≈ 0.44 (HyperParamEnsemble Logistic Regression).
 
-- 
+  
 - Homogeneous model ensembles (HyperParamEnsemble) provided marginal benefits: for example, the logistic regression ensemble achieved the highest macro-F1 (~0.44) on single-treatment predictions.However, these ensembles did not boost overall accuracy compared to the best single models, and sometimes even reduced it (e.g. the SVM ensemble matched 65.4% vs single SVM’s 65.1% accuracy).
+  
 - No model had a statistically significant edge overall – a Friedman test on all results yielded p ≈ 1.0 – suggesting that performance differences among classifiers were not meaningful across datasets.
 
 
-Predicting combination-treatment outcomes (11-class multi-therapy task) was far more challenging – best models reached only ~28% accuracy (macro-F1 ~0.18), effectively near chance level and affirming that mixed treatment labels obscure the predictive signal.
-All models nearly solved a control 10-class digits dataset (~97–99% accuracy), confirming the pipeline’s correctness and highlighting that the LUAD tasks’ low scores stem from data difficulty rather than modeling issues.
-SVM and Random Forest were the most accurate classifiers on the LUAD single-therapy task (~65% accuracy), while logistic regression was less accurate (~51%) but achieved a relatively higher macro-F1 (0.42) by better recognizing minority classes.
-Homogeneous model ensembles (HyperParamEnsemble) provided marginal benefits: for example, the logistic regression ensemble achieved the highest macro-F1 (~0.44) on single-treatment predictions.
-However, these ensembles did not boost overall accuracy compared to the best single models, and sometimes even reduced it (e.g. the SVM ensemble matched 65.4% vs single SVM’s 65.1% accuracy).
-No model had a statistically significant edge overall – a Friedman test on all results yielded p ≈ 1.0 – suggesting that performance differences among classifiers were not meaningful across datasets.
-Overall, the results support the idea that molecular profiles carry some predictive signal for therapy choice, but current models are not accurate enough for clinical use, especially for complex multi-therapy cases.
-- Macro F1 scores were substantially lower than accuracy on the LUAD datasets, reflecting class imbalance and uneven classifier performance across therapy types.
-
-  
-**Key Findings:**
-- Molecular profiles alone have limited predictive power for chosen therapies – ~65% accuracy at best for single-modality treatment.
-- Predicting combination treatments is an open challenge (performance fell near chance-level).
 
 The goal of this experiment was to evaluate the performance of different classification models on multiple datasets, using both individual classifiers with hyperparameter tuning and an ensemble approach. In theory, ensembling should provide better generalization and performance than individual models, as it combines multiple models trained with different hyperparameters, which helps reduce variance and bias. However, the results turned out to be ambiguous.
 
@@ -149,7 +138,6 @@ Working with more complex datasets, such as Fashion-MNIST and MNIST, proved to b
 Regarding model performance, SVM turned out to be the slowest classifier. Reducing the number of folds in cross-validation and experimenting with kernels did not significantly affect its speed. However, our HyperParamEnsembleClassifier demonstrated decent efficiency on complex datasets — it maintained fairly high results with lower computational costs (presumably due to a small number of estimators) compared to tuning hyperparameter combinations for an individual SVM (the results were slightly better, but training took significantly longer). The ensemble also outperformed some individual classifiers on complex datasets, which indicates its ability to find diverse hyperparameter configurations.
 
 Overall, the ensemble performed completely opposite to expectations. On complex and large datasets, it showed worse results, while on simple and small ones, it performed better. One of the main reasons was the hyperparameter selection strategy. We used GridSearchCV for individual classifiers, which exhaustively searches through all possible hyperparameter combinations to find the optimal configuration. At the same time, our HyperParamEnsembleClassifier does not perform a full search but instead randomly selects a limited number of hyperparameter combinations (equal to the number of models in the ensemble) and averages the predictions through voting. This created a slight bias in favor of individual models, as they benefited from a more detailed hyperparameter search, whereas the ensemble depended on the random selection of configurations. A fairer comparison would have been to use RandomizedSearchCV for individual models. Additionally, in the future, performance can be improved by applying dimensionality reduction methods such as PCA, which will reduce the computational load when working with high-dimensional data, as well as by more precisely selecting hyperparameter ranges to achieve an optimal balance between prediction quality and model execution speed.
-
 
 
 ## Future Work
