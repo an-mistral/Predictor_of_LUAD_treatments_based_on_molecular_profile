@@ -132,6 +132,45 @@ Top-3 Overall (mean across datasets):
 > *Discussion (Compute & runtime)* Model training was computationally demanding, since fitting and tuning required substantial resources. Runtime was highly model- and hyperparameter-dependent; cross-validation was kept fixed (as a deliberate trade-off between reliability and cost), yet exhaustive tuning still dominated total compute. However, `HyperParamEnsembleClassifier` demonstrated decent efficiency — it maintained fairly high results with lower computational costs (presumably due to a small number of estimators) compared to tuning hyperparameter combinations for an individual models (the results were slightly better, but training took significantly longer). The ensemble also outperformed some individual classifiers on datasets, which indicates its ability to find diverse hyperparameter configurations.
 
 ## Future Work
+- **Scale up and refine single-therapy data (highest impact for hypothesis testing)**
+  - Collect **larger single-therapy cohorts** (more patients per class).
+  - Move from therapy categories to **drug-/regimen-level labels** (specific agents, lines of therapy, dose/schedule where possible) to reduce label noise and strengthen the genotype–treatment signal. 
+
+- **Switch to outcome-driven targets (from “what was prescribed” to “what works”)**
+  - Train models on **response vs. resistance** (e.g., RECIST/ORR/DCR) rather than historical treatment choice.
+  - Formulate per-treatment tasks: *“Is patient likely to benefit from therapy X?”* (more clinically meaningful than predicting physician decisions). 
+
+- **Add survival analysis (mandatory extension)**
+  - Model **time-to-event endpoints** (OS/PFS) with survival methods (e.g., CoxPH / Random Survival Forest / DeepSurv).
+  - Evaluate with **C-index** and time-dependent AUC; enable treatment-effect comparisons via survival stratification. 
+
+- **Improve representation of sparse molecular features**
+  - Apply **feature selection** (frequency/informativeness) + **regularisation** (L1/ElasticNet).
+  - Engineer **pathway-level features** (aggregate mutations into functional pathways) to reduce sparsity and increase biological signal.
+
+- **Smarter feature engineering (biology + clinic)**
+  - Add composite biomarkers (e.g., **TMB/MSI**, driver counts, actionable alterations if available).
+  - Model interactions **(clinical × molecular)** and improve preprocessing (missingness handling, leakage control, calibration).
+    
+- **Handle class imbalance explicitly**
+  - Use **class weights**, resampling (over/under-sampling), and threshold tuning.
+  - Prioritise **macro-F1 / per-class recall / PR-AUC** to avoid majority-class dominance. 
+
+- **Richer hyperparameter optimisation + stricter evaluation**
+  - Replace coarse grids with **Bayesian optimisation** (e.g., Optuna) and widen the search space.
+  - Use **nested CV** (or robust external holdout) to prevent optimistic tuning bias.
+
+- **Add richer omics modalities (as separate modelling tracks)**
+  - Explore pipelines using **gene expression** (transcriptomics) and **proteomics** (or in parallel).
+  - Compare: mutation-only vs. expression-only vs. multi-omics fusion (late/early fusion).
+
+- **Dimensionality reduction for stability and generalisation**
+  - Apply **PCA** (and/or other DR methods) on high-dimensional omics features to reduce noise and improve conditioning.
+  - Validate DR choices via CV and assess impact on macro-F1 and calibration.
+
+- **Broader, disease-specific cohorts + external validation**
+  - Expand LUAD cohorts across centers/time and validate on **independent datasets** to test transportability.
+  - Stratify by clinically meaningful subgroups (stage, oncogenic drivers, line of therapy).
 
 ## Environment & Dependencies
 This project is implemented in Python (Jupyter/Colab) and uses a standard ML stack for tabular modelling, evaluation, and visualisation.
