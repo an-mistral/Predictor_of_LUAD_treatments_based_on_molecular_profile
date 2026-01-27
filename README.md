@@ -116,7 +116,23 @@ Top-3 Overall (mean across datasets):
 |                               | 2    | HyperParamEnsemble (LogReg)         |
 |                               | 3    | CatBoost                            |
 
-- As expected, the **Digits** control dataset was nearly solved by all models (≈97–99% accuracy), confirming the models' implementation correctness.
+- The single-therapy vs. multi-therapy gap is a signal check: when labels are “clean” (single modality), performance is substantially higher; when labels mix modalities, performance drops sharply due to label ambiguity. This supports the existence of predictive signal in molecular profiles for treatment modality.
+- Single-therapy classification using molecular and clinical features was only moderately successful (highest ~65% accuracy and ~0.44 macro-F1), indicating limited predictive power for treatment selection from biomarkers.
+- All models nearly solved a control 10-class digits dataset (~97–99% accuracy), confirming the pipeline’s correctness and highlighting that the LUAD tasks’ low scores stem from data difficulty rather than modeling issues.
+- Sanity check (Digits dataset): models reach ~97–99% accuracy, indicating the implementation is correct and LUAD results are driven by task difficulty.
+
+- 
+- Homogeneous model ensembles (HyperParamEnsemble) provided marginal benefits: for example, the logistic regression ensemble achieved the highest macro-F1 (~0.44) on single-treatment predictions.However, these ensembles did not boost overall accuracy compared to the best single models, and sometimes even reduced it (e.g. the SVM ensemble matched 65.4% vs single SVM’s 65.1% accuracy).
+- No model had a statistically significant edge overall – a Friedman test on all results yielded p ≈ 1.0 – suggesting that performance differences among classifiers were not meaningful across datasets.
+
+
+Predicting combination-treatment outcomes (11-class multi-therapy task) was far more challenging – best models reached only ~28% accuracy (macro-F1 ~0.18), effectively near chance level and affirming that mixed treatment labels obscure the predictive signal.
+All models nearly solved a control 10-class digits dataset (~97–99% accuracy), confirming the pipeline’s correctness and highlighting that the LUAD tasks’ low scores stem from data difficulty rather than modeling issues.
+SVM and Random Forest were the most accurate classifiers on the LUAD single-therapy task (~65% accuracy), while logistic regression was less accurate (~51%) but achieved a relatively higher macro-F1 (0.42) by better recognizing minority classes.
+Homogeneous model ensembles (HyperParamEnsemble) provided marginal benefits: for example, the logistic regression ensemble achieved the highest macro-F1 (~0.44) on single-treatment predictions.
+However, these ensembles did not boost overall accuracy compared to the best single models, and sometimes even reduced it (e.g. the SVM ensemble matched 65.4% vs single SVM’s 65.1% accuracy).
+No model had a statistically significant edge overall – a Friedman test on all results yielded p ≈ 1.0 – suggesting that performance differences among classifiers were not meaningful across datasets.
+Overall, the results support the idea that molecular profiles carry some predictive signal for therapy choice, but current models are not accurate enough for clinical use, especially for complex multi-therapy cases.
 - Macro F1 scores were substantially lower than accuracy on the LUAD datasets, reflecting class imbalance and uneven classifier performance across therapy types.
 
   
