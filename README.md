@@ -116,8 +116,10 @@ Top-3 Overall (mean across datasets):
 |                               | 2    | HyperParamEnsemble (LogReg)         |
 |                               | 3    | CatBoost                            |
 
-- As expected, the **Digits** control dataset was nearly solved by all models (≈97–99% accuracy), confirming the implementation’s correctness.
+- As expected, the **Digits** control dataset was nearly solved by all models (≈97–99% accuracy), confirming the models' implementation correctness.
+- Macro F1 scores were substantially lower than accuracy on the LUAD datasets, reflecting class imbalance and uneven classifier performance across therapy types.
 
+  
 **Key Findings:**
 - Molecular profiles alone have limited predictive power for chosen therapies – ~65% accuracy at best for single-modality treatment.
 - Predicting combination treatments is an open challenge (performance fell near chance-level).
