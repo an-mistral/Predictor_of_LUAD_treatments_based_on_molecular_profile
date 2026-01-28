@@ -1,6 +1,6 @@
 # Predictive Modelling for Lung Cancer Treatment Selection Based on Molecular Profile
 ## Project Overview 
-Personalised medicine is transforming healthcare by tailoring treatments to individual patients. In modern precision oncology, for instance, clinicians use a patient’s molecular profile (genomic and proteomic markers) to guide the choice of targeted therapy.
+Personalised medicine is transforming healthcare by tailoring treatments to individual patients. In modern precision oncology, for instance, clinicians use a patient’s molecular profile (e.g., genomics,transcriptomics, proteomics) to guide the choice of targeted therapy.
 
 The project has three primary objectives:
 - **Predictive Potential of Molecular Profiles:** Determine if and how well molecular profiling data can be used to predict a patient’s treatment type or the optimal therapy choice. In other words, investigate whether patterns in molecular markers correlate strongly enough with treatment outcomes to enable accurate predictions.
