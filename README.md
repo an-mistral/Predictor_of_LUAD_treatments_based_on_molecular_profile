@@ -85,7 +85,7 @@ If successful, such a predictive model could become a clinical decision-support 
       - *Hard*: each member votes for a class label, and the majority class is the ensemble prediction.
       - *Soft*: average the predicted class probabilities from all members and pick the argmax as the final prediction.
    
-   - **Model Evaluation (Hold-out):** Each `HyperParamEnsemble` is evaluated on a single stratified train/test split (80/20). Performance is measured with Accuracy and Macro F1-score on the held-out test set (no cross-validation, since the ensemble itself spans multiple models).
+   - **Model Evaluation (Hold-out):** Each `HyperParamEnsemble` is evaluated on a single stratified train/test split (80/20). Performance is measured with Accuracy and Macro F1-score on the held-out test set.
 
 6. **Evaluation & Comparison**
   - Aggregate all metrics (accuracy, F1, etc.) per model and dataset into comparison tables for clarity.
